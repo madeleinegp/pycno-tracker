@@ -9,209 +9,12 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .obs-shell {
-      display: grid;
-      grid-template-columns: var(--sidebar-w) 1fr var(--detail-w);
-      height: 100vh;
-      font-family: var(--mono);
-      color: var(--text-main);
-    }
-    .obs-sidebar {
-      background: var(--bg-dark);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .nav-bar {
-      display: flex;
-      gap: 6px;
-      padding: 0.75rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      align-items: center;
-    }
-    .nav-link {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-dim);
-      text-decoration: none;
-      padding: 4px 10px;
-      border-radius: 6px;
-      border: 1px solid transparent;
-      transition: all 0.15s;
-    }
-    .nav-link:hover { color: var(--text-main); border-color: var(--border); }
-    .nav-link.active { color: var(--accent); border-color: rgba(200,216,122,0.3); }
-    .nav-sep { color: var(--text-dim); font-size: 12px; }
-
-    .source-tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-    }
-    .source-tab {
-      flex: 1;
-      padding: 10px 6px;
-      font-family: var(--mono);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid transparent;
-      color: var(--text-dim);
-      cursor: pointer;
-      transition: all 0.15s;
-      text-align: center;
-    }
-    .source-tab:hover { color: var(--text-muted); }
-    .source-tab.active { color: var(--text-main); border-bottom-color: var(--accent); }
-    .source-tab.inat.active { border-bottom-color: #74ac00; }
-    .source-tab.gbif.active { border-bottom-color: #4592d8; }
-    .tab-count {
-      display: inline-block;
-      margin-left: 4px;
-      background: var(--bg-dark3);
-      padding: 1px 5px;
-      border-radius: 10px;
-      font-size: 9px;
-    }
-    .year-filter {
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .year-filter label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
-    .year-filter select {
-      font-family: var(--mono);
-      font-size: 11px;
-      background: var(--bg-dark2);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 3px 6px;
-      border-radius: 6px;
-      flex: 1;
-    }
-    .obs-count-bar {
-      padding: 0.45rem 1rem;
-      font-size: 10px;
-      color: var(--text-dim);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .loading-accent { color: var(--accent); }
-    .obs-list {
-      flex: 1;
-      overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: var(--bg-dark3) transparent;
-    }
-    .obs-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 0.6rem 1rem;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      transition: background 0.12s;
-    }
-    .obs-row:hover { background: var(--bg-dark2); }
-    .obs-row.selected { background: var(--bg-dark3); }
-    .obs-source-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      margin-top: 3px;
-    }
-    .obs-source-dot.inat { background: #74ac00; }
-    .obs-source-dot.gbif { background: #4592d8; }
-    .obs-row-info { flex: 1; min-width: 0; }
-    .obs-row-place { font-size: 12px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .obs-row-meta  { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-    .obs-row-grade {
-      font-size: 9px;
-      padding: 2px 6px;
-      border-radius: 10px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .grade-research { background: rgba(116,172,0,0.15); color: #74ac00; }
-    .grade-needs    { background: rgba(200,216,122,0.1); color: var(--text-dim); }
-    .grade-casual   { background: rgba(255,255,255,0.05); color: var(--text-dim); }
-    .grade-gbif     { background: rgba(69,146,216,0.15); color: #4592d8; }
-
-    .loading-spinner {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 2rem; gap: 12px;
-      color: var(--text-dim); font-size: 12px;
-    }
-    .spinner {
-      width: 24px; height: 24px;
-      border: 2px solid var(--bg-dark3);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .error-msg {
-      padding: 1rem;
-      font-size: 11px;
-      color: #f5b5b5;
-      background: rgba(58,26,26,0.5);
-      border: 1px solid rgba(122,48,48,0.5);
-      border-radius: 8px;
-      margin: 0.75rem;
-      line-height: 1.6;
-    }
-
-    .obs-photo {
-      width: 100%;
-      aspect-ratio: 4/3;
-      object-fit: cover;
-      border-radius: var(--radius);
-      margin-bottom: 1rem;
-      border: 1px solid var(--border);
-      background: var(--bg-dark2);
-    }
-    .obs-photo-placeholder {
-      width: 100%;
-      aspect-ratio: 4/3;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--bg-dark2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-dim);
-      font-size: 11px;
-      margin-bottom: 1rem;
-    }
-    .obs-ext-link {
-      display: block;
-      text-align: center;
-      margin-top: 1rem;
-      font-size: 11px;
-      color: var(--accent);
-      text-decoration: none;
-      border: 1px solid rgba(200,216,122,0.3);
-      border-radius: 7px;
-      padding: 7px;
-      transition: background 0.15s;
-    }
-    .obs-ext-link:hover { background: rgba(200,216,122,0.08); }
-  </style>
 </head>
 <body>
-<div class="obs-shell">
+<div class="app-shell">
 
   <!-- Sidebar -->
-  <aside class="obs-sidebar">
+  <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo-mark">Pycno<span>Track</span></div>
       <p class="sidebar-sub">Occurrence Records</p>
@@ -231,7 +34,7 @@
 
     <div class="year-filter">
       <label>Year</label>
-      <select id="yearFilter"><option value="">All years</option></select>
+      <select id="yearFilter"><option value="">All (2010–present)</option></select>
     </div>
 
     <div class="obs-count-bar">
@@ -240,7 +43,7 @@
     </div>
 
     <div class="obs-list" id="obsList">
-      <div class="loading-spinner"><div class="spinner"></div>Querying iNaturalist…</div>
+      <div class="loading-spinner"><div class="spinner"></div>Querying iNaturalist & GBIF for California records…</div>
     </div>
   </aside>
 
@@ -262,8 +65,9 @@
       </button>
     </div>
     <div class="map-legend">
-      <div class="legend-item"><span class="dot" style="background:#74ac00"></span>iNaturalist</div>
-      <div class="legend-item"><span class="dot" style="background:#4592d8"></span>GBIF</div>
+      <div class="legend-item"><span class="dot" style="background:#5ea500"></span>iNaturalist</div>
+      <div class="legend-item"><span class="dot" style="background:#3a7cc5"></span>GBIF</div>
+      <div class="legend-item" style="margin-top:4px; padding-top:6px; border-top:1px solid rgba(100,70,200,0.1); font-size:9px; color:var(--text-dim);">📍 California only · 2010–present</div>
     </div>
   </main>
 
@@ -293,6 +97,18 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="config.js"></script>
 <script>
+// ── Config ───────────────────────────────────────────────────────
+// California bounding box: SW(32.5,-124.5) NE(42,-114)
+const CA_BBOX   = { minLat:32.5, maxLat:42.0, minLng:-124.5, maxLng:-114.0 };
+const YEAR_FROM = 2010;
+
+// iNaturalist place_id for California = 14
+const INAT_PLACE_ID = 14;
+// GBIF taxon key for Pycnopodia helianthoides
+const GBIF_TAXON_KEY = 2281886;
+// GBIF country US, stateProvince California
+const GBIF_STATE = "California";
+
 // ── Tiles ────────────────────────────────────────────────────────
 const TILES = {
   satellite: { url:"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attr:"Tiles &copy; Esri" },
@@ -305,7 +121,8 @@ let map, currentTile;
 
 // ── Map ──────────────────────────────────────────────────────────
 function initMap() {
-  map = L.map("map", { center: [50, -130], zoom: 4 });
+  // Center on California coast
+  map = L.map("map", { center: [37.5, -122.5], zoom: 6 });
   setTile("satellite");
 }
 function setTile(s) {
@@ -313,36 +130,43 @@ function setTile(s) {
   currentTile = L.tileLayer(TILES[s].url, { attribution: TILES[s].attr, maxZoom: 19 }).addTo(map);
 }
 function makeIcon(source, sel) {
-  const c = source === "inat" ? "#74ac00" : "#4592d8";
+  const c = source === "inat" ? "#5ea500" : "#3a7cc5";
   const sz = sel ? 18 : 11, ring = sel ? 28 : 19;
   return L.divIcon({
     className: "",
     iconSize: [ring, ring], iconAnchor: [ring/2, ring/2],
-    html: `<div style="width:${ring}px;height:${ring}px;display:flex;align-items:center;justify-content:center;"><div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${c};border:2px solid white;box-shadow:0 0 0 ${sel?3:1}px ${c}88;"></div></div>`
+    html: `<div style="width:${ring}px;height:${ring}px;display:flex;align-items:center;justify-content:center;"><div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${c};border:2px solid white;box-shadow:0 0 0 ${sel?3:1}px ${c}66;"></div></div>`
   });
 }
 
 // ── iNaturalist ──────────────────────────────────────────────────
+// Uses place_id=14 (California) and d1=2010-01-01 to filter server-side
 async function fetchINat() {
   const results = [];
-  // Fetch up to 3 pages of 200 = 600 records
-  for (let page = 1; page <= 3; page++) {
-    setStatus(`iNat page ${page}…`);
-    const url = `https://api.inaturalist.org/v1/observations?taxon_name=Pycnopodia%20helianthoides&per_page=200&page=${page}&order=desc&order_by=observed_on&geo=true`;
+  const perPage = 200;
+  let page = 1, total = null;
+
+  while (true) {
+    setStatus(`iNat: loading page ${page}…`);
+    const url = `https://api.inaturalist.org/v1/observations?taxon_name=Pycnopodia%20helianthoides&place_id=${INAT_PLACE_ID}&d1=${YEAR_FROM}-01-01&per_page=${perPage}&page=${page}&order=desc&order_by=observed_on&geo=true`;
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      if (total === null) total = data.total_results || 0;
       if (!data.results || data.results.length === 0) break;
+
       for (const r of data.results) {
         const lat = r.location ? parseFloat(r.location.split(",")[0]) : null;
         const lng = r.location ? parseFloat(r.location.split(",")[1]) : null;
         if (!lat || !lng) continue;
+        // Extra bbox guard
+        if (lat < CA_BBOX.minLat || lat > CA_BBOX.maxLat || lng < CA_BBOX.minLng || lng > CA_BBOX.maxLng) continue;
         results.push({
           _id:    "inat-" + r.id,
           source: "inat",
           lat, lng,
-          place:  r.place_guess || r.description || "Unknown location",
+          place:  r.place_guess || "California",
           date:   r.observed_on || "—",
           year:   r.observed_on ? r.observed_on.slice(0,4) : "—",
           user:   r.user ? r.user.login : "—",
@@ -351,9 +175,10 @@ async function fetchINat() {
           url:    `https://www.inaturalist.org/observations/${r.id}`,
         });
       }
-      if (data.results.length < 200) break;
+      if (results.length >= total || data.results.length < perPage || page >= 15) break;
+      page++;
     } catch(e) {
-      console.error("iNat fetch error:", e);
+      console.error("iNat error:", e);
       break;
     }
   }
@@ -361,25 +186,31 @@ async function fetchINat() {
 }
 
 // ── GBIF ─────────────────────────────────────────────────────────
+// Filters by country=US, stateProvince=California, year>=2010
 async function fetchGBIF() {
   const results = [];
-  // taxonKey for Pycnopodia helianthoides = 2281886
-  for (let offset = 0; offset < 600; offset += 300) {
-    setStatus(`GBIF records ${offset}–${offset+300}…`);
-    const url = `https://api.gbif.org/v1/occurrence/search?taxonKey=2281886&hasCoordinate=true&limit=300&offset=${offset}`;
+  const limit = 300;
+
+  for (let offset = 0; offset < 3000; offset += limit) {
+    setStatus(`GBIF: loading records ${offset + 1}–${offset + limit}…`);
+    const url = `https://api.gbif.org/v1/occurrence/search?taxonKey=${GBIF_TAXON_KEY}&country=US&stateProvince=California&hasCoordinate=true&year=${YEAR_FROM},2026&limit=${limit}&offset=${offset}`;
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!data.results || data.results.length === 0) break;
+
       for (const r of data.results) {
         if (!r.decimalLatitude || !r.decimalLongitude) continue;
+        // Extra bbox guard
+        if (r.decimalLatitude < CA_BBOX.minLat || r.decimalLatitude > CA_BBOX.maxLat) continue;
+        if (r.decimalLongitude < CA_BBOX.minLng || r.decimalLongitude > CA_BBOX.maxLng) continue;
         results.push({
           _id:     "gbif-" + r.key,
           source:  "gbif",
           lat:     r.decimalLatitude,
           lng:     r.decimalLongitude,
-          place:   r.locality || r.stateProvince || r.country || "Unknown location",
+          place:   r.locality || r.county || r.stateProvince || "California",
           date:    r.eventDate ? r.eventDate.slice(0,10) : (r.year ? String(r.year) : "—"),
           year:    r.year ? String(r.year) : "—",
           user:    r.recordedBy || r.institutionCode || r.collectionCode || "—",
@@ -391,7 +222,7 @@ async function fetchGBIF() {
       }
       if (data.endOfRecords) break;
     } catch(e) {
-      console.error("GBIF fetch error:", e);
+      console.error("GBIF error:", e);
       break;
     }
   }
@@ -401,46 +232,44 @@ async function fetchGBIF() {
 // ── Load ─────────────────────────────────────────────────────────
 async function loadAll() {
   try {
-    const inat = await fetchINat();
+    const [inat, gbif] = await Promise.all([fetchINat(), fetchGBIF()]);
+
     document.getElementById("countInat").textContent = inat.length;
-
-    const gbif = await fetchGBIF();
     document.getElementById("countGbif").textContent = gbif.length;
-
     allObs = [...inat, ...gbif];
     document.getElementById("countAll").textContent = allObs.length;
     setStatus("");
 
     if (allObs.length === 0) {
-      document.getElementById("obsList").innerHTML = `<div class="error-msg">No records loaded. This may be a network issue — try refreshing the page. Check the browser console (F12) for details.</div>`;
+      document.getElementById("obsList").innerHTML = `<div class="error-msg">No records found. This may be a network issue — try refreshing. Check the browser console (F12) for details.</div>`;
       document.getElementById("obsCountLabel").textContent = "0 records";
       return;
     }
 
-    // Year dropdown
-    const years = [...new Set(allObs.map(o => o.year).filter(y => y && y !== "—"))].sort().reverse();
+    // Year dropdown (2010–present)
+    const years = [...new Set(allObs.map(o => o.year).filter(y => y && y !== "—" && parseInt(y) >= YEAR_FROM))].sort().reverse();
     const sel = document.getElementById("yearFilter");
     years.forEach(y => { const o = document.createElement("option"); o.value = y; o.textContent = y; sel.appendChild(o); });
 
     render();
 
-    // Fit map
+    // Fit map to California coast
     const pts = allObs.filter(o => o.lat && o.lng);
     if (pts.length) map.fitBounds(L.latLngBounds(pts.map(o => [o.lat, o.lng])), { padding: [40,40] });
 
   } catch(e) {
     console.error("Load error:", e);
-    document.getElementById("obsList").innerHTML = `<div class="error-msg">Failed to load data: ${e.message}. Check your internet connection and try refreshing.</div>`;
+    document.getElementById("obsList").innerHTML = `<div class="error-msg">Failed to load: ${e.message}. Check your connection and try refreshing.</div>`;
     setStatus("error");
   }
 }
 
 function setStatus(msg) {
   document.getElementById("loadStatus").textContent = msg;
-  document.getElementById("obsCountLabel").textContent = msg ? "Loading…" : `${filtered().length.toLocaleString()} records`;
+  if (!msg) document.getElementById("obsCountLabel").textContent = `${filtered().length.toLocaleString()} records`;
 }
 
-// ── Render ───────────────────────────────────────────────────────
+// ── Filter + render ──────────────────────────────────────────────
 function filtered() {
   return allObs.filter(o => {
     if (activeSource !== "all" && o.source !== activeSource) return false;
@@ -476,7 +305,7 @@ function renderList(obs) {
       </div>
       <div class="obs-row-grade ${g.cls}">${g.label}</div>
     </div>`;
-  }).join("") + (obs.length > 500 ? `<div class="loading-msg">Showing 500 of ${obs.length.toLocaleString()} — use filters to narrow.</div>` : "");
+  }).join("") + (obs.length > 500 ? `<div class="loading-msg">Showing 500 of ${obs.length.toLocaleString()} — use year filter to narrow.</div>` : "");
   document.querySelectorAll(".obs-row").forEach(el => el.addEventListener("click", () => selectObs(el.dataset.id)));
 }
 
@@ -498,7 +327,7 @@ function selectObs(id) {
   const o = allObs.find(x => x._id === id);
   if (!o) return;
   render();
-  const color = o.source === "inat" ? "#74ac00" : "#4592d8";
+  const color = o.source === "inat" ? "#5ea500" : "#3a7cc5";
   document.getElementById("detailEmpty").style.display   = "none";
   document.getElementById("detailContent").style.display = "block";
   document.getElementById("dSourceDot").style.background = color;
