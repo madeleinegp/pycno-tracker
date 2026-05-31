@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pycno Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-mark">Pycno<span>Track</span></div>
+        <p class="sidebar-sub">Field Sample Tracker</p>
+      </div>
+
+      <div class="stats-block">
+        <div class="stat-item">
+          <span class="stat-num" id="statTotal">—</span>
+          <span class="stat-label">Sites</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num positive" id="statPos">—</span>
+          <span class="stat-label">Positive</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num negative" id="statNeg">—</span>
+          <span class="stat-label">Negative</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num pending" id="statPend">—</span>
+          <span class="stat-label">Pending</span>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="positive">Positive</button>
+        <button class="filter-btn" data-filter="negative">Negative</button>
+        <button class="filter-btn" data-filter="pending">Pending</button>
+        <button class="filter-btn" data-filter="unprocessed">Unprocessed</button>
+      </div>
+
+      <div class="site-list" id="siteList">
+        <div class="loading-msg">Loading sites…</div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="refresh-btn" id="refreshBtn">↻ Refresh data</button>
+        <span class="last-updated" id="lastUpdated"></span>
+      </div>
+    </aside>
+
+    <!-- Map -->
+    <main class="map-wrap">
+      <div id="map"></div>
+
+      <!-- Map style toggle -->
+      <div class="map-controls">
+        <button class="map-style-btn active" data-style="satellite" title="Satellite">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Satellite
+        </button>
+        <button class="map-style-btn" data-style="topo" title="Topo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-8 4 6 3-4 6 6"/></svg>
+          Topo
+        </button>
+        <button class="map-style-btn" data-style="street" title="Street">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l4 4"/></svg>
+          Street
+        </button>
+      </div>
+
+      <!-- Legend -->
+      <div class="map-legend">
+        <div class="legend-item"><span class="dot positive"></span>Positive</div>
+        <div class="legend-item"><span class="dot negative"></span>Negative</div>
+        <div class="legend-item"><span class="dot pending"></span>Processing</div>
+        <div class="legend-item"><span class="dot unprocessed"></span>Unprocessed</div>
+      </div>
+    </main>
+
+    <!-- Detail panel -->
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-empty" id="detailEmpty">
+        <div class="detail-empty-icon">◎</div>
+        <p>Select a site on the map<br>or from the list</p>
+      </div>
+      <div class="detail-content" id="detailContent" style="display:none">
+        <div class="detail-header">
+          <div class="detail-status-dot" id="dStatusDot"></div>
+          <div>
+            <h2 class="detail-name" id="dName"></h2>
+            <div class="detail-badge" id="dBadge"></div>
+          </div>
+          <button class="detail-close" id="detailClose">✕</button>
+        </div>
+        <div class="detail-fields" id="dFields"></div>
+        <div class="detail-notes-block" id="dNotesBlock" style="display:none">
+          <div class="detail-notes-label">Notes</div>
+          <div class="detail-notes" id="dNotes"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Error banner -->
+  <div class="error-banner" id="errorBanner" style="display:none">
+    <strong>Could not load data.</strong> Check your Google Sheet URL in <code>config.js</code> and make sure sharing is set to "Anyone with the link".
+    <button onclick="document.getElementById('errorBanner').style.display='none'">✕</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
