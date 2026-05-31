@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pycnopodia Records — Pycno Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Page-specific overrides ── */
+    .obs-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr var(--detail-w);
+      height: 100vh;
+      font-family: var(--mono);
+      color: var(--text-main);
+    }
+
+    .obs-sidebar {
+      background: var(--bg-dark);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .source-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .source-tab {
+      flex: 1;
+      padding: 10px 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .source-tab:hover { color: var(--text-muted); }
+    .source-tab.active { color: var(--text-main); border-bottom-color: var(--accent); }
+    .source-tab .tab-count {
+      display: inline-block;
+      margin-left: 4px;
+      background: var(--bg-dark3);
+      padding: 1px 5px;
+      border-radius: 10px;
+      font-size: 9px;
+    }
+    .source-tab.inat.active { border-bottom-color: #74ac00; }
+    .source-tab.gbif.active { border-bottom-color: #4592d8; }
+    .source-tab.all.active  { border-bottom-color: var(--accent); }
+
+    .year-filter {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .year-filter label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+    .year-filter select {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: var(--bg-dark2);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 3px 6px;
+      border-radius: 6px;
+      flex: 1;
+    }
+
+    .obs-count-bar {
+      padding: 0.5rem 1rem;
+      font-size: 10px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .obs-list {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bg-dark3) transparent;
+    }
+
+    .obs-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .obs-row:hover { background: var(--bg-dark2); }
+    .obs-row.selected { background: var(--bg-dark3); }
+
+    .obs-source-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .obs-source-dot.inat { background: #74ac00; }
+    .obs-source-dot.gbif { background: #4592d8; }
+
+    .obs-row-info { flex: 1; min-width: 0; }
+    .obs-row-place { font-size: 12px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .obs-row-meta  { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .obs-row-grade {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .grade-research { background: rgba(116,172,0,0.15); color: #74ac00; }
+    .grade-needs    { background: rgba(200,216,122,0.1); color: var(--text-dim); }
+    .grade-casual   { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+    .grade-gbif     { background: rgba(69,146,216,0.15); color: #4592d8; }
+
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      gap: 12px;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2px solid var(--bg-dark3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* detail panel obs-specific */
+    .obs-photo {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      background: var(--bg-dark2);
+    }
+    .obs-photo-placeholder {
+      width: 100%;
+      aspect-ratio: 4/3;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-dark2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 11px;
+      margin-bottom: 1rem;
+    }
+    .obs-ext-link {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid rgba(200,216,122,0.3);
+      border-radius: 7px;
+      padding: 7px;
+      transition: background 0.15s;
+    }
+    .obs-ext-link:hover { background: rgba(200,216,122,0.08); }
+
+    .nav-bar {
+      display: flex;
+      gap: 6px;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .nav-link {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .nav-link:hover { color: var(--text-main); border-color: var(--border); }
+    .nav-link.active { color: var(--accent); border-color: rgba(200,216,122,0.3); }
+    .nav-sep { color: var(--text-dim); font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="obs-shell">
+
+  <!-- Sidebar -->
+  <aside class="obs-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-mark">Pycno<span>Track</span></div>
+      <p class="sidebar-sub">Occurrence Records</p>
+    </div>
+
+    <div class="nav-bar">
+      <a href="index.html" class="nav-link">▹ My sites</a>
+      <span class="nav-sep">/</span>
+      <a href="observations.html" class="nav-link active">◉ Records</a>
+    </div>
+
+    <div class="source-tabs">
+      <button class="source-tab all active" data-source="all">All <span class="tab-count" id="countAll">—</span></button>
+      <button class="source-tab inat" data-source="inat">iNaturalist <span class="tab-count" id="countInat">—</span></button>
+      <button class="source-tab gbif" data-source="gbif">GBIF <span class="tab-count" id="countGbif">—</span></button>
+    </div>
+
+    <div class="year-filter">
+      <label>Year</label>
+      <select id="yearFilter">
+        <option value="">All years</option>
+      </select>
+    </div>
+
+    <div class="obs-count-bar">
+      <span id="obsCountLabel">Loading…</span>
+      <span id="loadingIndicator" style="color:var(--accent)"></span>
+    </div>
+
+    <div class="obs-list" id="obsList"></div>
+  </aside>
+
+  <!-- Map -->
+  <main class="map-wrap">
+    <div id="map"></div>
+    <div class="map-controls">
+      <button class="map-style-btn active" data-style="satellite">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Satellite
+      </button>
+      <button class="map-style-btn" data-style="topo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-8 4 6 3-4 6 6"/></svg>
+        Topo
+      </button>
+      <button class="map-style-btn" data-style="street">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l4 4"/></svg>
+        Street
+      </button>
+    </div>
+    <div class="map-legend">
+      <div class="legend-item"><span class="dot" style="background:#74ac00"></span>iNaturalist</div>
+      <div class="legend-item"><span class="dot" style="background:#4592d8"></span>GBIF</div>
+    </div>
+  </main>
+
+  <!-- Detail panel -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-empty" id="detailEmpty" style="display:flex">
+      <div class="detail-empty-icon">◎</div>
+      <p>Select a record to view details</p>
+    </div>
+    <div class="detail-content" id="detailContent" style="display:none">
+      <div class="detail-header">
+        <div class="detail-status-dot" id="dSourceDot"></div>
+        <div style="flex:1">
+          <h2 class="detail-name" id="dPlace"></h2>
+          <div class="detail-badge" id="dSource" style="margin-top:4px"></div>
+        </div>
+        <button class="detail-close" id="detailClose">✕</button>
+      </div>
+      <div id="dPhotoWrap"></div>
+      <div class="detail-fields" id="dFields"></div>
+      <a id="dExtLink" class="obs-ext-link" target="_blank" rel="noopener">View original record ↗</a>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="config.js"></script>
+<script>
+// ── Tiles ────────────────────────────────────────────────────────
+const TILES = {
+  satellite: { url:"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attr:"Tiles &copy; Esri" },
+  topo:      { url:"https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", attr:"&copy; OpenTopoMap" },
+  street:    { url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attr:"&copy; OpenStreetMap contributors" },
+};
+
+// ── State ────────────────────────────────────────────────────────
+let allObs    = [];
+let markers   = {};
+let activeSource = "all";
+let activeYear   = "";
+let selectedId   = null;
+let map, currentTile;
+
+// ── Map init ─────────────────────────────────────────────────────
+function initMap() {
+  map = L.map("map", { center: [48, -123], zoom: 4 });
+  setTile("satellite");
+}
+
+function setTile(style) {
+  if (currentTile) map.removeLayer(currentTile);
+  const t = TILES[style];
+  currentTile = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 });
+  currentTile.addTo(map);
+}
+
+function makeIcon(source, selected = false) {
+  const color = source === "inat" ? "#74ac00" : "#4592d8";
+  const size  = selected ? 18 : 12;
+  const ring  = selected ? 28 : 20;
+  return L.divIcon({
+    className: "",
+    iconSize: [ring, ring],
+    iconAnchor: [ring/2, ring/2],
+    html: `<div style="width:${ring}px;height:${ring}px;display:flex;align-items:center;justify-content:center;">
+      <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 0 0 ${selected?3:2}px ${color}55;"></div>
+    </div>`,
+  });
+}
+
+// ── Fetch iNaturalist ────────────────────────────────────────────
+async function fetchINat() {
+  let page = 1, results = [];
+  const perPage = 200;
+  while (true) {
+    const url = `https://api.inaturalist.org/v1/observations?taxon_name=Pycnopodia+helianthoides&per_page=${perPage}&page=${page}&order=desc&order_by=observed_on&geo=true&fields=id,observed_on,place_guess,quality_grade,photos,geojson,user`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.results || data.results.length === 0) break;
+    results = results.concat(data.results.map(r => ({
+      _id:     "inat-" + r.id,
+      source:  "inat",
+      lat:     r.geojson?.coordinates?.[1],
+      lng:     r.geojson?.coordinates?.[0],
+      place:   r.place_guess || "Unknown location",
+      date:    r.observed_on || "—",
+      year:    r.observed_on ? r.observed_on.slice(0,4) : "—",
+      user:    r.user?.login || "—",
+      grade:   r.quality_grade,
+      photo:   r.photos?.[0]?.url?.replace("square","medium") || null,
+      url:     `https://www.inaturalist.org/observations/${r.id}`,
+    })));
+    if (results.length >= data.total_results || page >= 10) break;
+    page++;
+  }
+  return results;
+}
+
+// ── Fetch GBIF ───────────────────────────────────────────────────
+async function fetchGBIF() {
+  let offset = 0, results = [];
+  const limit = 300;
+  while (true) {
+    const url = `https://api.gbif.org/v1/occurrence/search?scientificName=Pycnopodia+helianthoides&hasCoordinate=true&limit=${limit}&offset=${offset}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.results || data.results.length === 0) break;
+    results = results.concat(data.results.map(r => ({
+      _id:    "gbif-" + r.key,
+      source: "gbif",
+      lat:    r.decimalLatitude,
+      lng:    r.decimalLongitude,
+      place:  r.locality || r.stateProvince || r.country || "Unknown location",
+      date:   r.eventDate ? r.eventDate.slice(0,10) : (r.year ? String(r.year) : "—"),
+      year:   r.year ? String(r.year) : "—",
+      user:   r.recordedBy || r.institutionCode || "—",
+      grade:  "gbif",
+      photo:  r.media?.[0]?.identifier || null,
+      url:    `https://www.gbif.org/occurrence/${r.key}`,
+      dataset: r.datasetName || "—",
+    })));
+    if (data.endOfRecords || results.length >= 2000) break;
+    offset += limit;
+  }
+  return results;
+}
+
+// ── Load all data ────────────────────────────────────────────────
+async function loadAll() {
+  document.getElementById("obsList").innerHTML = `<div class="loading-spinner"><div class="spinner"></div>Querying iNaturalist & GBIF…</div>`;
+  document.getElementById("loadingIndicator").textContent = "fetching…";
+
+  const [inat, gbif] = await Promise.all([fetchINat(), fetchGBIF()]);
+  allObs = [...inat, ...gbif];
+
+  // Populate year filter
+  const years = [...new Set(allObs.map(o => o.year).filter(y => y && y !== "—"))].sort().reverse();
+  const sel = document.getElementById("yearFilter");
+  years.forEach(y => {
+    const opt = document.createElement("option");
+    opt.value = y; opt.textContent = y;
+    sel.appendChild(opt);
+  });
+
+  document.getElementById("countAll").textContent  = allObs.length;
+  document.getElementById("countInat").textContent = inat.length;
+  document.getElementById("countGbif").textContent = gbif.length;
+  document.getElementById("loadingIndicator").textContent = "";
+
+  render();
+
+  // Fit map to all points
+  const valid = allObs.filter(o => o.lat && o.lng);
+  if (valid.length) {
+    const bounds = L.latLngBounds(valid.map(o => [o.lat, o.lng]));
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
+}
+
+// ── Filter + render ──────────────────────────────────────────────
+function filtered() {
+  return allObs.filter(o => {
+    if (activeSource !== "all" && o.source !== activeSource) return false;
+    if (activeYear && o.year !== activeYear) return false;
+    return true;
+  });
+}
+
+function render() {
+  const obs = filtered();
+  document.getElementById("obsCountLabel").textContent = `${obs.length.toLocaleString()} records`;
+  renderList(obs);
+  renderMarkers(obs);
+}
+
+function gradeLabel(g) {
+  if (g === "research") return { label: "Research grade", cls: "grade-research" };
+  if (g === "needs_id")  return { label: "Needs ID", cls: "grade-needs" };
+  if (g === "gbif")      return { label: "GBIF", cls: "grade-gbif" };
+  return { label: "Casual", cls: "grade-casual" };
+}
+
+function renderList(obs) {
+  if (!obs.length) {
+    document.getElementById("obsList").innerHTML = `<div class="loading-msg">No records match.</div>`;
+    return;
+  }
+  document.getElementById("obsList").innerHTML = obs.slice(0, 500).map(o => {
+    const g = gradeLabel(o.grade);
+    return `<div class="obs-row ${selectedId === o._id ? "selected" : ""}" data-id="${o._id}">
+      <div class="obs-source-dot ${o.source}"></div>
+      <div class="obs-row-info">
+        <div class="obs-row-place">${o.place}</div>
+        <div class="obs-row-meta">${o.date} · ${o.user}</div>
+      </div>
+      <div class="obs-row-grade ${g.cls}">${g.label}</div>
+    </div>`;
+  }).join("") + (obs.length > 500 ? `<div class="loading-msg">Showing 500 of ${obs.length.toLocaleString()}. Use filters to narrow.</div>` : "");
+
+  document.querySelectorAll(".obs-row").forEach(el => {
+    el.addEventListener("click", () => selectObs(el.dataset.id));
+  });
+}
+
+function renderMarkers(obs) {
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  markers = {};
+  obs.forEach(o => {
+    if (!o.lat || !o.lng) return;
+    const m = L.marker([o.lat, o.lng], { icon: makeIcon(o.source, selectedId === o._id) });
+    m.on("click", () => selectObs(o._id));
+    m.addTo(map);
+    markers[o._id] = m;
+  });
+}
+
+// ── Selection ────────────────────────────────────────────────────
+function selectObs(id) {
+  selectedId = id;
+  const o = allObs.find(x => x._id === id);
+  if (!o) return;
+  render();
+
+  document.getElementById("detailEmpty").style.display   = "none";
+  document.getElementById("detailContent").style.display = "block";
+
+  const color = o.source === "inat" ? "#74ac00" : "#4592d8";
+  document.getElementById("dSourceDot").style.background = color;
+  document.getElementById("dPlace").textContent = o.place;
+  const srcEl = document.getElementById("dSource");
+  srcEl.textContent = o.source === "inat" ? "iNaturalist" : "GBIF";
+  srcEl.style.color = color;
+  srcEl.style.borderColor = color + "55";
+
+  const photoWrap = document.getElementById("dPhotoWrap");
+  if (o.photo) {
+    photoWrap.innerHTML = `<img class="obs-photo" src="${o.photo}" alt="Observation photo" onerror="this.parentElement.innerHTML='<div class=obs-photo-placeholder>No photo available</div>'" />`;
+  } else {
+    photoWrap.innerHTML = `<div class="obs-photo-placeholder">No photo available</div>`;
+  }
+
+  const g = gradeLabel(o.grade);
+  const fields = [
+    ["Date",    o.date],
+    ["Observer",o.user],
+    ["Quality", `<span class="obs-row-grade ${g.cls}" style="display:inline-block">${g.label}</span>`],
+  ];
+  if (o.dataset) fields.push(["Dataset", o.dataset]);
+  if (o.lat)     fields.push(["Coords", `${Number(o.lat).toFixed(4)}, ${Number(o.lng).toFixed(4)}`]);
+
+  document.getElementById("dFields").innerHTML = fields.map(([l, v]) =>
+    `<div class="dfield"><div class="dfield-label">${l}</div><div class="dfield-value">${v}</div></div>`
+  ).join("");
+
+  document.getElementById("dExtLink").href = o.url;
+  document.getElementById("dExtLink").textContent = `View on ${o.source === "inat" ? "iNaturalist" : "GBIF"} ↗`;
+
+  if (o.lat && o.lng) map.setView([o.lat, o.lng], Math.max(map.getZoom(), 8), { animate: true });
+}
+
+document.getElementById("detailClose").addEventListener("click", () => {
+  selectedId = null;
+  document.getElementById("detailEmpty").style.display   = "flex";
+  document.getElementById("detailContent").style.display = "none";
+  render();
+});
+
+// ── Controls ─────────────────────────────────────────────────────
+document.querySelectorAll(".source-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".source-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeSource = btn.dataset.source;
+    render();
+  });
+});
+
+document.getElementById("yearFilter").addEventListener("change", e => {
+  activeYear = e.target.value;
+  render();
+});
+
+document.querySelectorAll(".map-style-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".map-style-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    setTile(btn.dataset.style);
+  });
+});
+
+// ── Boot ─────────────────────────────────────────────────────────
+initMap();
+loadAll();
+</script>
+</body>
+</html>
