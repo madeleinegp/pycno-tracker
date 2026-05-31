@@ -8,10 +8,6 @@ const TILES = {
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attr: "Tiles &copy; Esri &mdash; Source: Esri, USGS, NOAA",
   },
-  topo: {
-    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-    attr: "&copy; <a href='https://opentopomap.org'>OpenTopoMap</a> contributors",
-  },
   street: {
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attr: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",

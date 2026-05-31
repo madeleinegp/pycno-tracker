@@ -6,7 +6,7 @@
   <title>Pycnopodia Records — Pycno Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -54,10 +54,6 @@
       <button class="map-style-btn active" data-style="satellite">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Satellite
-      </button>
-      <button class="map-style-btn" data-style="topo">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-8 4 6 3-4 6 6"/></svg>
-        Topo
       </button>
       <button class="map-style-btn" data-style="street">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l4 4"/></svg>
@@ -107,12 +103,12 @@ const INAT_PLACE_ID = 14;
 // GBIF taxon key for Pycnopodia helianthoides
 const GBIF_TAXON_KEY = 2281886;
 // GBIF country US, stateProvince California
-const GBIF_STATE = "California";
+const GBIF_LAT = "32.5,42.0";
+const GBIF_LNG = "-124.5,-114.0";
 
 // ── Tiles ────────────────────────────────────────────────────────
 const TILES = {
   satellite: { url:"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attr:"Tiles &copy; Esri" },
-  topo:      { url:"https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", attr:"&copy; OpenTopoMap" },
   street:    { url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attr:"&copy; OpenStreetMap contributors" },
 };
 
@@ -193,7 +189,7 @@ async function fetchGBIF() {
 
   for (let offset = 0; offset < 3000; offset += limit) {
     setStatus(`GBIF: loading records ${offset + 1}–${offset + limit}…`);
-    const url = `https://api.gbif.org/v1/occurrence/search?taxonKey=${GBIF_TAXON_KEY}&country=US&stateProvince=California&hasCoordinate=true&year=${YEAR_FROM},2026&limit=${limit}&offset=${offset}`;
+    const url = `https://api.gbif.org/v1/occurrence/search?taxonKey=${GBIF_TAXON_KEY}&hasCoordinate=true&decimalLatitude=${GBIF_LAT}&decimalLongitude=${GBIF_LNG}&year=${YEAR_FROM},2026&limit=${limit}&offset=${offset}`;
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
