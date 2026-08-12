@@ -81,15 +81,43 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 }
 
 .sidebar-header {
-  padding: 1.4rem 1.3rem 1.1rem;
+  position: relative;
+  height: 132px;
   border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--surface2);
 }
+.header-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  display: block;
+}
+.header-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10,10,11,0.92) 0%, rgba(10,10,11,0.5) 55%, rgba(10,10,11,0.15) 100%);
+}
+.header-text {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 0 1.3rem 0.9rem;
+}
+/* Fallback when no photo has been added yet — plain header, no scrim needed */
+.sidebar-header.no-photo { height: auto; padding: 1.3rem 0 1.1rem; }
+.sidebar-header.no-photo .header-scrim { display: none; }
+.sidebar-header.no-photo .header-text { position: static; padding: 0 1.3rem; }
+.sidebar-header.no-photo .logo-mark,
+.sidebar-header.no-photo .sidebar-sub { color: inherit; }
 
 .logo-mark {
   font-family: var(--display);
-  font-size: 23px;
+  font-size: 22px;
   font-weight: 500;
-  color: var(--text);
+  color: #fff;
   letter-spacing: -0.01em;
   line-height: 1;
 }
@@ -97,7 +125,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 
 .sidebar-sub {
   font-size: 10px;
-  color: var(--text-3);
+  color: rgba(255,255,255,0.6);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-top: 6px;
