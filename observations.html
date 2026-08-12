@@ -100,8 +100,8 @@ const YEAR_FROM = 2010;
 
 // iNaturalist place_id for California = 14
 const INAT_PLACE_ID = 14;
-// GBIF taxon key for Pycnopodia helianthoides
-const GBIF_TAXON_KEY = 2281886;
+// GBIF taxon key for Pycnopodia helianthoides (verified: gbif.org/species/2274565)
+const GBIF_TAXON_KEY = 2274565;
 // GBIF country US, stateProvince California
 const GBIF_LAT = "32.5,42.0";
 const GBIF_LNG = "-124.5,-114.0";
@@ -144,7 +144,7 @@ async function fetchINat() {
 
   while (true) {
     setStatus(`iNat: loading page ${page}…`);
-    const url = `https://api.inaturalist.org/v1/observations?taxon_name=Pycnopodia%20helianthoides&place_id=${INAT_PLACE_ID}&d1=${YEAR_FROM}-01-01&per_page=${perPage}&page=${page}&order=desc&order_by=observed_on&geo=true`;
+    const url = `https://api.inaturalist.org/v1/observations?taxon_name=Pycnopodia%20helianthoides&place_id=${INAT_PLACE_ID}&quality_grade=research&d1=${YEAR_FROM}-01-01&per_page=${perPage}&page=${page}&order=desc&order_by=observed_on&geo=true`;
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
