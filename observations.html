@@ -1,382 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pycnopodia Records — Pycno Tracker</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8">
+<title>Pycno Tracker — Records</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
-<div class="app-shell">
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <img class="header-photo" src="pycnopodia.jpg" alt="Pycnopodia helianthoides in the field" onerror="this.style.display='none'; this.parentElement.classList.add('no-photo')" />
-      <div class="header-scrim"></div>
-      <div class="header-text">
-        <div class="logo-mark">Pycno<span>Track</span></div>
-        <p class="sidebar-sub">Occurrence Records</p>
-      </div>
+<header class="masthead">
+  <img class="masthead-photo" src="pycnopodia.jpg" alt="" onerror="this.remove()">
+  <div class="masthead-scrim"></div>
+  <div class="masthead-eyebrow">Pycno Tracker / occurrence records</div>
+  <div class="masthead-content">
+    <div class="masthead-status">
+      <span class="masthead-status-dot"></span>
+      <span>iNaturalist + GBIF — California, 2010 to present</span>
     </div>
+    <h1>Citizen-science occurrences</h1>
+    <p class="masthead-deck">Every georeferenced Pycnopodia record inside the California bounding box, pulled live from iNaturalist research-grade observations and GBIF occurrences.</p>
+  </div>
+</header>
 
-    <div class="nav-bar">
-      <a href="index.html" class="nav-link">▹ My sites</a>
-      <span class="nav-sep">/</span>
-      <a href="observations.html" class="nav-link active">◉ Records</a>
-    </div>
+<nav class="topnav">
+  <div class="tab-group">
+    <a href="index.html" class="tab">Sites</a>
+    <span class="tab active">Records</span>
+  </div>
+  <div class="topnav-right">
+    <span id="lastUpdated">Loading…</span>
+    <button class="refresh-btn" id="refreshBtn">Refresh</button>
+  </div>
+</nav>
 
-    <div class="source-tabs">
-      <button class="source-tab all active" data-source="all">All <span class="tab-count" id="countAll">—</span></button>
-      <button class="source-tab inat" data-source="inat">iNat <span class="tab-count" id="countInat">—</span></button>
-      <button class="source-tab gbif" data-source="gbif">GBIF <span class="tab-count" id="countGbif">—</span></button>
-    </div>
+<section class="stats stats--3">
+  <div class="stat-cell"><div class="stat-num" id="statAll">—</div><div class="stat-label">Records total</div></div>
+  <div class="stat-cell"><div class="stat-num" id="statInat" style="--stat-color:var(--inat)">—</div><div class="stat-label">iNaturalist</div></div>
+  <div class="stat-cell"><div class="stat-num" id="statGbif" style="--stat-color:var(--gbif)">—</div><div class="stat-label" id="gbifNote">GBIF</div></div>
+</section>
 
-    <div class="year-filter">
-      <label>Year</label>
-      <select id="yearFilter"><option value="">All (2010–present)</option></select>
-    </div>
+<section class="section-head">
+  <h2>Occurrence map</h2>
+  <p>Markers follow the source and year filters. Click a marker for the full record.</p>
+</section>
 
-    <div class="obs-count-bar">
-      <span id="obsCountLabel">Loading…</span>
-      <span id="loadStatus" class="loading-accent"></span>
-    </div>
-
-    <div class="obs-list" id="obsList">
-      <div class="loading-spinner"><div class="spinner"></div>Querying iNaturalist & GBIF for California records…</div>
-    </div>
-  </aside>
-
-  <!-- Map -->
-  <main class="map-wrap">
-    <div id="map"></div>
-    <div class="map-controls">
-      <button class="map-style-btn active" data-style="satellite">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Satellite
-      </button>
-      <button class="map-style-btn" data-style="street">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l4 4"/></svg>
-        Street
-      </button>
+<section class="map-section">
+  <div class="map-frame">
+    <div class="map-el" id="map"></div>
+    <div class="map-toggle">
+      <button id="btnSatellite" class="active">Satellite</button>
+      <button id="btnStreet">Street</button>
     </div>
     <div class="map-legend">
-      <div class="legend-item"><span class="dot" style="background:#5ea500"></span>iNaturalist</div>
-      <div class="legend-item"><span class="dot" style="background:#3a7cc5"></span>GBIF</div>
-      <div class="legend-item" style="margin-top:4px; padding-top:6px; border-top:1px solid rgba(100,70,200,0.1); font-size:9px; color:var(--text-dim);">📍 California only · 2010–present</div>
+      <div class="legend-title">Source</div>
+      <div class="legend-row"><span class="legend-dot" style="--dot-color:var(--inat)"></span><span>iNaturalist</span></div>
+      <div class="legend-row"><span class="legend-dot" style="--dot-color:var(--gbif)"></span><span>GBIF</span></div>
+      <div class="legend-footnote">California only · 2010–present</div>
     </div>
-  </main>
-
-  <!-- Detail panel -->
-  <div class="detail-panel" id="detailPanel">
-    <div class="detail-empty" id="detailEmpty" style="display:flex">
-      <div class="detail-empty-icon">◎</div>
-      <p>Select a record to view details</p>
-    </div>
-    <div class="detail-content" id="detailContent" style="display:none">
-      <div class="detail-header">
-        <div class="detail-status-dot" id="dSourceDot"></div>
-        <div style="flex:1">
-          <h2 class="detail-name" id="dPlace"></h2>
-          <div class="detail-badge" id="dSourceLabel" style="margin-top:4px"></div>
-        </div>
-        <button class="detail-close" id="detailClose">✕</button>
-      </div>
-      <div id="dPhotoWrap"></div>
-      <div class="detail-fields" id="dFields"></div>
-      <a id="dExtLink" class="obs-ext-link" target="_blank" rel="noopener">View original record ↗</a>
+    <div class="map-loading" id="mapLoading">
+      <span class="spinner"></span>
+      <span id="statusText">Querying iNaturalist &amp; GBIF…</span>
     </div>
   </div>
+</section>
 
+<section class="list-section">
+  <div class="section-head" style="padding:0; margin-bottom:0;">
+    <h2>Record list</h2>
+    <div class="mono-label" id="shownLabel" style="font-size:11px;">—</div>
+  </div>
+
+  <div class="list-toolbar">
+    <div class="toolbar-left">
+      <div class="pill-row" id="sourcePills"></div>
+      <div class="year-wrap">
+        <span class="mono-label">Year</span>
+        <select class="year-select" id="yearSelect">
+          <option value="">All (2010–present)</option>
+        </select>
+      </div>
+    </div>
+    <input class="search-input" id="searchInput" placeholder="Search locality or observer…">
+  </div>
+
+  <div class="list-body-wrap">
+    <div class="list-header list-grid-records">
+      <span>Locality</span><span>Date</span><span>Observer</span><span>Quality</span><span></span>
+    </div>
+    <div id="listBody"></div>
+    <div class="empty-state" id="emptyState" hidden></div>
+    <div class="truncation-note" id="truncNote" hidden></div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <span>Pycno Tracker — internal research tool</span>
+  <span>Sources — iNaturalist API v1 · GBIF occurrence API</span>
+</footer>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle" id="modalPanel">
+    <div class="modal-header">
+      <div>
+        <div class="modal-source" id="modalSource" style="--modal-color:var(--ink)">
+          <span class="modal-source-dot"></span><span id="modalSourceText"></span>
+        </div>
+        <h3 class="modal-title" id="modalTitle"></h3>
+      </div>
+      <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalPhotoWrap"></div>
+      <div class="field-grid" id="modalFields"></div>
+      <div class="modal-link" id="modalLinkWrap"></div>
+    </div>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="config.js"></script>
-<script>
-// ── Config ───────────────────────────────────────────────────────
-// California bounding box: SW(32.5,-124.5) NE(42,-114)
-const CA_BBOX   = { minLat:32.5, maxLat:42.0, minLng:-124.5, maxLng:-114.0 };
-const YEAR_FROM = 2010;
-
-// iNaturalist place_id for California = 14
-const INAT_PLACE_ID = 14;
-// GBIF taxon key for Pycnopodia helianthoides (verified: gbif.org/species/2274565)
-const GBIF_TAXON_KEY = 2274565;
-// GBIF country US, stateProvince California
-const GBIF_LAT = "32.5,42.0";
-const GBIF_LNG = "-124.5,-114.0";
-
-// ── Tiles ────────────────────────────────────────────────────────
-const TILES = {
-  satellite: { url:"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attr:"Tiles &copy; Esri" },
-  street:    { url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attr:"&copy; OpenStreetMap contributors" },
-};
-
-let allObs = [], markers = {}, activeSource = "all", activeYear = "", selectedId = null;
-let map, currentTile;
-
-// ── Map ──────────────────────────────────────────────────────────
-function initMap() {
-  // Center on California coast
-  map = L.map("map", { center: [37.5, -122.5], zoom: 6 });
-  setTile("satellite");
-}
-function setTile(s) {
-  if (currentTile) map.removeLayer(currentTile);
-  currentTile = L.tileLayer(TILES[s].url, { attribution: TILES[s].attr, maxZoom: 19 }).addTo(map);
-}
-function makeIcon(source, sel) {
-  const c = source === "inat" ? "#5ea500" : "#3a7cc5";
-  const sz = sel ? 18 : 11, ring = sel ? 28 : 19;
-  return L.divIcon({
-    className: "",
-    iconSize: [ring, ring], iconAnchor: [ring/2, ring/2],
-    html: `<div style="width:${ring}px;height:${ring}px;display:flex;align-items:center;justify-content:center;"><div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${c};border:2px solid white;box-shadow:0 0 0 ${sel?3:1}px ${c}66;"></div></div>`
-  });
-}
-
-// ── iNaturalist ──────────────────────────────────────────────────
-// Uses place_id=14 (California) and d1=2010-01-01 to filter server-side
-async function fetchINat() {
-  const results = [];
-  const perPage = 200;
-  let page = 1, total = null;
-
-  while (true) {
-    setStatus(`iNat: loading page ${page}…`);
-    const url = `https://api.inaturalist.org/v1/observations?taxon_name=Pycnopodia%20helianthoides&place_id=${INAT_PLACE_ID}&quality_grade=research&d1=${YEAR_FROM}-01-01&per_page=${perPage}&page=${page}&order=desc&order_by=observed_on&geo=true`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (total === null) total = data.total_results || 0;
-      if (!data.results || data.results.length === 0) break;
-
-      for (const r of data.results) {
-        const lat = r.location ? parseFloat(r.location.split(",")[0]) : null;
-        const lng = r.location ? parseFloat(r.location.split(",")[1]) : null;
-        if (!lat || !lng) continue;
-        // Extra bbox guard
-        if (lat < CA_BBOX.minLat || lat > CA_BBOX.maxLat || lng < CA_BBOX.minLng || lng > CA_BBOX.maxLng) continue;
-        results.push({
-          _id:    "inat-" + r.id,
-          source: "inat",
-          lat, lng,
-          place:  r.place_guess || "California",
-          date:   r.observed_on || "—",
-          year:   r.observed_on ? r.observed_on.slice(0,4) : "—",
-          user:   r.user ? r.user.login : "—",
-          grade:  r.quality_grade || "casual",
-          photo:  r.photos && r.photos.length ? r.photos[0].url.replace("square","medium") : null,
-          url:    `https://www.inaturalist.org/observations/${r.id}`,
-        });
-      }
-      if (results.length >= total || data.results.length < perPage || page >= 15) break;
-      page++;
-    } catch(e) {
-      console.error("iNat error:", e);
-      break;
-    }
-  }
-  return results;
-}
-
-// ── GBIF ─────────────────────────────────────────────────────────
-// Filters by country=US, stateProvince=California, year>=2010
-async function fetchGBIF() {
-  const results = [];
-  const limit = 300;
-
-  for (let offset = 0; offset < 3000; offset += limit) {
-    setStatus(`GBIF: loading records ${offset + 1}–${offset + limit}…`);
-    const url = `https://api.gbif.org/v1/occurrence/search?taxonKey=${GBIF_TAXON_KEY}&hasCoordinate=true&decimalLatitude=${GBIF_LAT}&decimalLongitude=${GBIF_LNG}&year=${YEAR_FROM},2026&limit=${limit}&offset=${offset}`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (!data.results || data.results.length === 0) break;
-
-      for (const r of data.results) {
-        if (!r.decimalLatitude || !r.decimalLongitude) continue;
-        // Extra bbox guard
-        if (r.decimalLatitude < CA_BBOX.minLat || r.decimalLatitude > CA_BBOX.maxLat) continue;
-        if (r.decimalLongitude < CA_BBOX.minLng || r.decimalLongitude > CA_BBOX.maxLng) continue;
-        results.push({
-          _id:     "gbif-" + r.key,
-          source:  "gbif",
-          lat:     r.decimalLatitude,
-          lng:     r.decimalLongitude,
-          place:   r.locality || r.county || r.stateProvince || "California",
-          date:    r.eventDate ? r.eventDate.slice(0,10) : (r.year ? String(r.year) : "—"),
-          year:    r.year ? String(r.year) : "—",
-          user:    r.recordedBy || r.institutionCode || r.collectionCode || "—",
-          grade:   "gbif",
-          photo:   r.media && r.media.length ? r.media[0].identifier : null,
-          url:     `https://www.gbif.org/occurrence/${r.key}`,
-          dataset: r.datasetName || null,
-        });
-      }
-      if (data.endOfRecords) break;
-    } catch(e) {
-      console.error("GBIF error:", e);
-      break;
-    }
-  }
-  return results;
-}
-
-// ── Load ─────────────────────────────────────────────────────────
-async function loadAll() {
-  try {
-    const [inat, gbif] = await Promise.all([fetchINat(), fetchGBIF()]);
-
-    document.getElementById("countInat").textContent = inat.length;
-    document.getElementById("countGbif").textContent = gbif.length;
-    allObs = [...inat, ...gbif];
-    document.getElementById("countAll").textContent = allObs.length;
-    setStatus("");
-
-    if (allObs.length === 0) {
-      document.getElementById("obsList").innerHTML = `<div class="error-msg">No records found. This may be a network issue — try refreshing. Check the browser console (F12) for details.</div>`;
-      document.getElementById("obsCountLabel").textContent = "0 records";
-      return;
-    }
-
-    // Year dropdown (2010–present)
-    const years = [...new Set(allObs.map(o => o.year).filter(y => y && y !== "—" && parseInt(y) >= YEAR_FROM))].sort().reverse();
-    const sel = document.getElementById("yearFilter");
-    years.forEach(y => { const o = document.createElement("option"); o.value = y; o.textContent = y; sel.appendChild(o); });
-
-    render();
-
-    // Fit map to California coast
-    const pts = allObs.filter(o => o.lat && o.lng);
-    if (pts.length) map.fitBounds(L.latLngBounds(pts.map(o => [o.lat, o.lng])), { padding: [40,40] });
-
-  } catch(e) {
-    console.error("Load error:", e);
-    document.getElementById("obsList").innerHTML = `<div class="error-msg">Failed to load: ${e.message}. Check your connection and try refreshing.</div>`;
-    setStatus("error");
-  }
-}
-
-function setStatus(msg) {
-  document.getElementById("loadStatus").textContent = msg;
-  if (!msg) document.getElementById("obsCountLabel").textContent = `${filtered().length.toLocaleString()} records`;
-}
-
-// ── Filter + render ──────────────────────────────────────────────
-function filtered() {
-  return allObs.filter(o => {
-    if (activeSource !== "all" && o.source !== activeSource) return false;
-    if (activeYear && o.year !== activeYear) return false;
-    return true;
-  });
-}
-
-function render() {
-  const obs = filtered();
-  document.getElementById("obsCountLabel").textContent = `${obs.length.toLocaleString()} records`;
-  renderList(obs);
-  renderMarkers(obs);
-}
-
-function gradeInfo(g) {
-  if (g === "research") return { label:"Research grade", cls:"grade-research" };
-  if (g === "needs_id")  return { label:"Needs ID",       cls:"grade-needs" };
-  if (g === "gbif")      return { label:"GBIF",           cls:"grade-gbif" };
-  return { label:"Casual", cls:"grade-casual" };
-}
-
-function renderList(obs) {
-  if (!obs.length) { document.getElementById("obsList").innerHTML = `<div class="loading-msg">No records match.</div>`; return; }
-  const shown = obs.slice(0, 500);
-  document.getElementById("obsList").innerHTML = shown.map(o => {
-    const g = gradeInfo(o.grade);
-    return `<div class="obs-row${selectedId===o._id?" selected":""}" data-id="${o._id}">
-      <div class="obs-source-dot ${o.source}"></div>
-      <div class="obs-row-info">
-        <div class="obs-row-place">${o.place}</div>
-        <div class="obs-row-meta">${o.date} · ${o.user}</div>
-      </div>
-      <div class="obs-row-grade ${g.cls}">${g.label}</div>
-    </div>`;
-  }).join("") + (obs.length > 500 ? `<div class="loading-msg">Showing 500 of ${obs.length.toLocaleString()} — use year filter to narrow.</div>` : "");
-  document.querySelectorAll(".obs-row").forEach(el => el.addEventListener("click", () => selectObs(el.dataset.id)));
-}
-
-function renderMarkers(obs) {
-  Object.values(markers).forEach(m => map.removeLayer(m));
-  markers = {};
-  obs.forEach(o => {
-    if (!o.lat || !o.lng) return;
-    const m = L.marker([o.lat, o.lng], { icon: makeIcon(o.source, selectedId===o._id) });
-    m.on("click", () => selectObs(o._id));
-    m.addTo(map);
-    markers[o._id] = m;
-  });
-}
-
-// ── Detail ───────────────────────────────────────────────────────
-function selectObs(id) {
-  selectedId = id;
-  const o = allObs.find(x => x._id === id);
-  if (!o) return;
-  render();
-  const color = o.source === "inat" ? "#5ea500" : "#3a7cc5";
-  document.getElementById("detailEmpty").style.display   = "none";
-  document.getElementById("detailContent").style.display = "block";
-  document.getElementById("dSourceDot").style.background = color;
-  document.getElementById("dPlace").textContent = o.place;
-  const sl = document.getElementById("dSourceLabel");
-  sl.textContent = o.source === "inat" ? "iNaturalist" : "GBIF";
-  sl.style.color = color; sl.style.borderColor = color + "55";
-  document.getElementById("dPhotoWrap").innerHTML = o.photo
-    ? `<img class="obs-photo" src="${o.photo}" alt="photo" onerror="this.outerHTML='<div class=obs-photo-placeholder>No photo available</div>'">`
-    : `<div class="obs-photo-placeholder">No photo available</div>`;
-  const g = gradeInfo(o.grade);
-  const fields = [
-    ["Date",     o.date],
-    ["Observer", o.user],
-    ["Quality",  `<span class="obs-row-grade ${g.cls}">${g.label}</span>`],
-    ["Coords",   `${Number(o.lat).toFixed(4)}, ${Number(o.lng).toFixed(4)}`],
-  ];
-  if (o.dataset) fields.push(["Dataset", o.dataset]);
-  document.getElementById("dFields").innerHTML = fields.map(([l,v]) =>
-    `<div class="dfield"><div class="dfield-label">${l}</div><div class="dfield-value">${v}</div></div>`).join("");
-  const lnk = document.getElementById("dExtLink");
-  lnk.href = o.url;
-  lnk.textContent = `View on ${o.source === "inat" ? "iNaturalist" : "GBIF"} ↗`;
-  if (o.lat && o.lng) map.setView([o.lat, o.lng], Math.max(map.getZoom(), 8), { animate: true });
-}
-
-document.getElementById("detailClose").addEventListener("click", () => {
-  selectedId = null;
-  document.getElementById("detailEmpty").style.display   = "flex";
-  document.getElementById("detailContent").style.display = "none";
-  render();
-});
-
-// ── Controls ─────────────────────────────────────────────────────
-document.querySelectorAll(".source-tab").forEach(btn => btn.addEventListener("click", () => {
-  document.querySelectorAll(".source-tab").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  activeSource = btn.dataset.source;
-  render();
-}));
-document.getElementById("yearFilter").addEventListener("change", e => { activeYear = e.target.value; render(); });
-document.querySelectorAll(".map-style-btn").forEach(btn => btn.addEventListener("click", () => {
-  document.querySelectorAll(".map-style-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  setTile(btn.dataset.style);
-}));
-
-initMap();
-loadAll();
-</script>
+<script src="records.js?v=4"></script>
 </body>
 </html>

@@ -1,131 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pycno Tracker</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8">
+<title>Pycno Tracker — Sites</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
-  <div class="app-shell">
+<header class="masthead">
+  <img class="masthead-photo" src="pycnopodia.jpg" alt="" onerror="this.remove()">
+  <div class="masthead-scrim"></div>
+  <div class="masthead-eyebrow">Pycno Tracker / eDNA field program</div>
+  <div class="masthead-content">
+    <div class="masthead-status">
+      <span class="masthead-status-dot"></span>
+      <span>Pycnopodia helianthoides — critically endangered</span>
+    </div>
+    <h1>Sunflower sea star detections</h1>
+    <p class="masthead-deck">eDNA sampling sites along the California coast, from Point Loma to the Oregon line. Each site carries its lab status, surveyor and field notes.</p>
+  </div>
+</header>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <img class="header-photo" src="pycnopodia.jpg" alt="Pycnopodia helianthoides in the field" onerror="this.style.display='none'; this.parentElement.classList.add('no-photo')" />
-        <div class="header-scrim"></div>
-        <div class="header-text">
-          <div class="logo-mark">Pycno<span>Track</span></div>
-          <p class="sidebar-sub">Field Sample Tracker</p>
+<nav class="topnav">
+  <div class="tab-group">
+    <span class="tab active">Sites</span>
+    <a href="observations.html" class="tab">Records</a>
+  </div>
+  <div class="topnav-right">
+    <span id="lastUpdated">Loading…</span>
+    <button class="refresh-btn" id="refreshBtn">Refresh</button>
+  </div>
+</nav>
+
+<section class="stats stats--4">
+  <div class="stat-cell"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Sites sampled</div></div>
+  <div class="stat-cell"><div class="stat-num" id="statPos" style="--stat-color:var(--positive)">—</div><div class="stat-label">Positive</div></div>
+  <div class="stat-cell"><div class="stat-num" id="statNeg" style="--stat-color:var(--negative)">—</div><div class="stat-label">Negative</div></div>
+  <div class="stat-cell"><div class="stat-num" id="statPend" style="--stat-color:var(--pending)">—</div><div class="stat-label">Pending / unprocessed</div></div>
+</section>
+
+<section class="section-head">
+  <h2>Coastwide map</h2>
+  <p>Markers reflect the active filter below. Click a marker to open its record.</p>
+</section>
+
+<section class="map-section">
+  <div class="map-frame">
+    <div class="map-el" id="map"></div>
+    <div class="map-toggle">
+      <button id="btnSatellite" class="active">Satellite</button>
+      <button id="btnStreet">Street</button>
+    </div>
+    <div class="map-legend">
+      <div class="legend-title">Lab status</div>
+      <div class="legend-row"><span class="legend-dot" style="--dot-color:var(--positive)"></span><span>Positive detection</span></div>
+      <div class="legend-row"><span class="legend-dot" style="--dot-color:var(--negative)"></span><span>Negative</span></div>
+      <div class="legend-row"><span class="legend-dot" style="--dot-color:var(--pending)"></span><span>Processing</span></div>
+      <div class="legend-row"><span class="legend-dot" style="--dot-color:var(--unprocessed)"></span><span>Not yet processed</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="list-section">
+  <div class="section-head" style="padding:0; margin-bottom:0;">
+    <h2>Site records</h2>
+    <div class="mono-label" id="shownLabel" style="font-size:11px;">—</div>
+  </div>
+
+  <div class="list-toolbar">
+    <div class="toolbar-left">
+      <div class="pill-row" id="filterPills"></div>
+    </div>
+    <input class="search-input" id="searchInput" placeholder="Search site, surveyor, notes…">
+  </div>
+
+  <div class="list-body-wrap">
+    <div class="list-header list-grid-sites">
+      <span>Site</span><span>Date</span><span>Surveyor</span><span>Status</span><span></span>
+    </div>
+    <div id="listBody"></div>
+    <div class="empty-state" id="emptyState" hidden>No sites match this filter.</div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <span>Pycno Tracker — internal research tool</span>
+  <span id="sourceNote"></span>
+</footer>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle" id="modalPanel">
+    <div class="modal-header">
+      <div>
+        <div class="modal-source" id="modalSource" style="--modal-color:var(--ink)">
+          <span class="modal-source-dot"></span><span id="modalStatusText"></span>
         </div>
+        <h3 class="modal-title" id="modalTitle"></h3>
       </div>
-
-      <div class="nav-bar">
-        <a href="index.html" class="nav-link active">▹ My sites</a>
-        <span class="nav-sep">/</span>
-        <a href="observations.html" class="nav-link">◉ Records</a>
-      </div>
-
-      <div class="stats-block">
-        <div class="stat-item">
-          <span class="stat-num" id="statTotal">—</span>
-          <span class="stat-label">Sites</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-num positive" id="statPos">—</span>
-          <span class="stat-label">Positive</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-num negative" id="statNeg">—</span>
-          <span class="stat-label">Negative</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-num pending" id="statPend">—</span>
-          <span class="stat-label">Pending</span>
-        </div>
-      </div>
-
-      <div class="filter-row">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="positive">Positive</button>
-        <button class="filter-btn" data-filter="negative">Negative</button>
-        <button class="filter-btn" data-filter="pending">Pending</button>
-        <button class="filter-btn" data-filter="unprocessed">Unprocessed</button>
-      </div>
-
-      <div class="site-list" id="siteList">
-        <div class="loading-msg">Loading sites…</div>
-      </div>
-
-      <div class="sidebar-footer">
-        <button class="refresh-btn" id="refreshBtn">↻ Refresh data</button>
-        <span class="last-updated" id="lastUpdated"></span>
-      </div>
-    </aside>
-
-    <!-- Map -->
-    <main class="map-wrap">
-      <div id="map"></div>
-
-      <!-- Map style toggle -->
-      <div class="map-controls">
-        <button class="map-style-btn active" data-style="satellite" title="Satellite">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          Satellite
-        </button>
-        <button class="map-style-btn" data-style="street" title="Street">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l4 4"/></svg>
-          Street
-        </button>
-      </div>
-
-      <!-- Legend -->
-      <div class="map-legend">
-        <div class="legend-item"><span class="dot positive"></span>Positive</div>
-        <div class="legend-item"><span class="dot negative"></span>Negative</div>
-        <div class="legend-item"><span class="dot pending"></span>Processing</div>
-        <div class="legend-item"><span class="dot unprocessed"></span>Unprocessed</div>
-      </div>
-    </main>
-
-    <!-- Detail panel -->
-    <div class="detail-panel" id="detailPanel">
-      <div class="detail-empty" id="detailEmpty">
-        <div class="detail-empty-icon">◎</div>
-        <p>Select a site on the map<br>or from the list</p>
-      </div>
-      <div class="detail-content" id="detailContent" style="display:none">
-        <div class="detail-header">
-          <div class="detail-status-dot" id="dStatusDot"></div>
-          <div>
-            <h2 class="detail-name" id="dName"></h2>
-            <div class="detail-badge" id="dBadge"></div>
-          </div>
-          <button class="detail-close" id="detailClose">✕</button>
-        </div>
-        <div class="detail-fields" id="dFields"></div>
-        <div class="detail-notes-block" id="dNotesBlock" style="display:none">
-          <div class="detail-notes-label">Notes</div>
-          <div class="detail-notes" id="dNotes"></div>
-        </div>
+      <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-grid" id="modalFields"></div>
+      <div class="notes-block" id="modalNotesBlock" hidden>
+        <div class="notes-label">Field notes</div>
+        <p class="notes-text" id="modalNotes"></p>
       </div>
     </div>
-
   </div>
+</div>
 
-  <!-- Error banner -->
-  <div class="error-banner" id="errorBanner" style="display:none">
-    <strong>Could not load data.</strong> Check your Google Sheet URL in <code>config.js</code> and make sure sharing is set to "Anyone with the link".
-    <button onclick="document.getElementById('errorBanner').style.display='none'">✕</button>
-  </div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="config.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
