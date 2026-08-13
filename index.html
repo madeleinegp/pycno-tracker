@@ -6,21 +6,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
 <header class="masthead">
   <img class="masthead-photo" src="pycnopodia.jpg" alt="" onerror="this.remove()">
   <div class="masthead-scrim"></div>
+  <div class="masthead-eyebrow">Pycno Tracker / eDNA field sampling</div>
   <div class="masthead-content">
     <div class="masthead-status">
       <span class="masthead-status-dot"></span>
       <span>Pycnopodia helianthoides — critically endangered</span>
     </div>
-    <h1>Sunflower sea star detections</h1>
+    <h1>Sunflower sea star eDNA detections</h1>
   </div>
 </header>
 
@@ -86,6 +87,48 @@
   </div>
 </section>
 
+<section class="section-head">
+  <h2>Coastwide sampling network</h2>
+  <p>Partner institutions collecting for this program, from San Diego to Alaska. Diamond markers are water sampling for Vibrio pectinicida only — no Pycnopodia eDNA component.</p>
+</section>
+
+<section class="map-section">
+  <div class="map-frame">
+    <div class="map-el" id="netMap"></div>
+    <div class="map-legend">
+      <div class="legend-title">Sample type</div>
+      <div class="legend-row"><span class="legend-dot" style="--dot-color:var(--ink)"></span><span>eDNA sampling site</span></div>
+      <div class="legend-row"><span class="legend-dot legend-dot--diamond" style="--dot-color:var(--accent)"></span><span>Water sampling — V. pec only</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="list-section">
+  <div class="section-head" style="padding:0; margin-bottom:0;">
+    <h2>Network sites</h2>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span class="mono-label" id="netSourceNote" style="font-size:10.5px;">Loading…</span>
+      <span class="mono-label" id="netShownLabel" style="font-size:11px;">—</span>
+      <button class="refresh-btn" id="netRefreshBtn">Refresh</button>
+    </div>
+  </div>
+
+  <div class="list-toolbar">
+    <div class="toolbar-left">
+      <div class="pill-row" id="netFilterPills"></div>
+    </div>
+    <input class="search-input" id="netSearchInput" placeholder="Search site, region, lead…">
+  </div>
+
+  <div class="list-body-wrap">
+    <div class="list-header list-grid-network">
+      <span>Site</span><span>Region</span><span>Group</span><span>Purpose</span><span></span>
+    </div>
+    <div id="netListBody"></div>
+    <div class="empty-state" id="netEmptyState" hidden>No sites match this filter.</div>
+  </div>
+</section>
+
 <footer class="site-footer">
   <span>Pycno Tracker — internal research tool</span>
   <span id="sourceNote"></span>
@@ -112,8 +155,31 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="netModalBackdrop" hidden>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="netModalTitle" id="netModalPanel">
+    <div class="modal-header">
+      <div>
+        <div class="modal-source" id="netModalSource" style="--modal-color:var(--ink)">
+          <span class="modal-source-dot"></span><span id="netModalGroupText"></span>
+        </div>
+        <h3 class="modal-title" id="netModalTitle"></h3>
+      </div>
+      <button class="modal-close" id="netModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-grid" id="netModalFields"></div>
+      <div class="notes-block" id="netModalNotesBlock" hidden>
+        <div class="notes-label">Notes</div>
+        <p class="notes-text" id="netModalNotes"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="config.js?v=4"></script>
 <script src="app.js?v=4"></script>
+<script src="network-data.js?v=2"></script>
+<script src="network.js?v=2"></script>
 </body>
 </html>

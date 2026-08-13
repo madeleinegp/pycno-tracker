@@ -24,6 +24,10 @@ const CONFIG = {
     processed:  "Processed",   // "Yes" or "No"
     result:     "Result",      // "Positive", "Negative", or blank
     notes:      "Notes",
-  }
+  },
+
+  // Coastwide sampling network (separate workbook — multi-institution coordination sheet)
+  NETWORK_SHEET_ID: "1JN5d6QYsW4gKvZxne6WHeJYJSMNmM2u-v9o2B3NqlTA",
+  NETWORK_SHEET_NAME: "eDNA Sites"
 
 };
