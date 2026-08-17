@@ -46,6 +46,7 @@ const state = {
   sites: [],
   filter: "all",
   query: "",
+  sort: "default",
   expandedId: null,
   modalId: null,
   tile: "satellite",
@@ -66,13 +67,27 @@ function fieldsFor(row) {
   ];
 }
 
+const STATUS_ORDER = { positive: 0, negative: 1, pending: 2, unprocessed: 3 };
+
 function visible() {
   const q = state.query.trim().toLowerCase();
-  return state.sites.filter(r => {
+  let out = state.sites.filter(r => {
     if (state.filter !== "all" && statusOf(r) !== state.filter) return false;
     if (!q) return true;
     return [COLS.site_name, COLS.surveyor, COLS.notes, COLS.date].some(k => String(r[k] || "").toLowerCase().includes(q));
   });
+  if (state.sort === "name") {
+    out = out.slice().sort((a, b) => String(a[COLS.site_name] || "").localeCompare(String(b[COLS.site_name] || "")));
+  } else if (state.sort === "date") {
+    out = out.slice().sort((a, b) => {
+      const ta = Date.parse(a[COLS.date]), tb = Date.parse(b[COLS.date]);
+      const va = isNaN(ta) ? -Infinity : ta, vb = isNaN(tb) ? -Infinity : tb;
+      return vb - va; // newest first; undated rows sink to the bottom
+    });
+  } else if (state.sort === "status") {
+    out = out.slice().sort((a, b) => STATUS_ORDER[statusOf(a)] - STATUS_ORDER[statusOf(b)]);
+  }
+  return out;
 }
 
 // ── Data load ──────────────────────────────────────────────────
@@ -295,6 +310,7 @@ document.getElementById("refreshBtn").addEventListener("click", load);
 document.getElementById("btnSatellite").addEventListener("click", () => { state.tile = "satellite"; applyTile(); render(); });
 document.getElementById("btnStreet").addEventListener("click", () => { state.tile = "street"; applyTile(); render(); });
 document.getElementById("searchInput").addEventListener("input", e => { state.query = e.target.value; render(); });
+document.getElementById("sortSelect").addEventListener("change", e => { state.sort = e.target.value; render(); });
 document.getElementById("modalClose").addEventListener("click", closeModal);
 document.getElementById("modalBackdrop").addEventListener("click", e => { if (e.target.id === "modalBackdrop") closeModal(); });
 document.addEventListener("keydown", e => { if (!document.getElementById("modalBackdrop").hidden) trapFocus(e); });

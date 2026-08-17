@@ -35,7 +35,7 @@
   --modal-scrim: rgba(23,21,15,.55);
 
   --font-display: 'Instrument Sans', Helvetica, Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-mono: 'Instrument Sans', Helvetica, Arial, sans-serif;
 
   --gutter: 40px;
   --radius-pill: 999px;
@@ -306,6 +306,17 @@ button, input, select { font-family: inherit; }
 .modal-link a { display: inline-block; padding: 10px 18px; border: 1px solid var(--ink); border-radius: var(--radius-pill); font-size: 13px; font-weight: 600; color: var(--ink); }
 .modal-link a:hover { background: var(--ink); color: var(--paper); }
 
+/* ── Sampling network section ─────────────────────────────────── */
+.list-grid-network { grid-template-columns: minmax(200px,2fr) 110px 130px 1fr 34px; }
+.legend-dot--diamond { border-radius: 2px; transform: rotate(45deg); box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px rgba(0,0,0,.12); }
+.vpec-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: var(--radius-pill); border: 1px solid rgba(176,74,34,.4);
+  font-size: 10.5px; font-weight: 600; color: var(--accent); white-space: nowrap;
+}
+.vpec-badge::before { content: ""; width: 6px; height: 6px; background: var(--accent); border-radius: 1px; transform: rotate(45deg); flex-shrink: 0; }
+.row-purpose { font-size: 12.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 720px) {
   :root { --gutter: 20px; --map-height: 380px; }
@@ -313,9 +324,9 @@ button, input, select { font-family: inherit; }
   .stats--4, .stats--3 { grid-template-columns: repeat(2, 1fr); }
   .stat-cell:nth-child(2n) { border-right: none; }
   .stat-cell:nth-child(n+3) { border-top: 1px solid var(--rule); }
-  .list-grid-sites, .list-grid-records { grid-template-columns: 1fr 34px; }
+  .list-grid-sites, .list-grid-records, .list-grid-network { grid-template-columns: 1fr 34px; }
   .list-header span:not(:first-child):not(:last-child) { display: none; }
-  .row-date, .row-sub, .row-status, .row-grade { display: none; }
+  .row-date, .row-sub, .row-status, .row-grade, .row-purpose { display: none; }
   .row-name-cell { flex-direction: column; align-items: flex-start; gap: 2px; }
   .row-name { white-space: normal; }
   .row-detail-grid { grid-template-columns: 1fr; }

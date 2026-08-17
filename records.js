@@ -82,7 +82,7 @@ async function fetchGBIF() {
   const limit = 300;
   for (let offset = 0; offset < GBIF_FETCH_BUDGET; offset += limit) {
     setStatus("GBIF — records " + (offset + 1) + "–" + (offset + limit));
-    const url = `https://api.gbif.org/v1/occurrence/search?taxonKey=${GBIF_TAXON_KEY}&hasCoordinate=true&decimalLatitude=${CA.minLat},${CA.maxLat}&decimalLongitude=${CA.minLng},${CA.maxLng}&year=${YEAR_FROM},2026&limit=${limit}&offset=${offset}`;
+    const url = `https://api.gbif.org/v1/occurrence/search?taxonKey=${GBIF_TAXON_KEY}&hasCoordinate=true&occurrenceStatus=PRESENT&decimalLatitude=${CA.minLat},${CA.maxLat}&decimalLongitude=${CA.minLng},${CA.maxLng}&year=${YEAR_FROM},2026&limit=${limit}&offset=${offset}`;
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error("HTTP " + res.status);
@@ -90,6 +90,10 @@ async function fetchGBIF() {
       if (typeof data.count === "number") gbifTotal = data.count;
       if (!data.results || !data.results.length) break;
       for (const r of data.results) {
+        // Defensive check even with the server-side filter above — some datasets
+        // report presence/absence surveys (e.g. organismQuantity: 0) inconsistently.
+        if (r.occurrenceStatus && String(r.occurrenceStatus).toUpperCase() === "ABSENT") continue;
+        if (r.organismQuantity === 0) continue;
         if (!r.decimalLatitude || !r.decimalLongitude) continue;
         if (r.decimalLatitude < CA.minLat || r.decimalLatitude > CA.maxLat) continue;
         if (r.decimalLongitude < CA.minLng || r.decimalLongitude > CA.maxLng) continue;

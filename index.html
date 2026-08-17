@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -17,10 +17,6 @@
   <div class="masthead-scrim"></div>
   <div class="masthead-eyebrow">Pycno Tracker / eDNA field sampling</div>
   <div class="masthead-content">
-    <div class="masthead-status">
-      <span class="masthead-status-dot"></span>
-      <span>Pycnopodia helianthoides — critically endangered</span>
-    </div>
     <h1>Sunflower sea star eDNA detections</h1>
   </div>
 </header>
@@ -74,6 +70,15 @@
   <div class="list-toolbar">
     <div class="toolbar-left">
       <div class="pill-row" id="filterPills"></div>
+      <div class="year-wrap">
+        <span class="mono-label">Sort</span>
+        <select class="year-select" id="sortSelect">
+          <option value="default">Default order</option>
+          <option value="name">Name (A–Z)</option>
+          <option value="date">Date (newest first)</option>
+          <option value="status">Status</option>
+        </select>
+      </div>
     </div>
     <input class="search-input" id="searchInput" placeholder="Search site, surveyor, notes…">
   </div>
@@ -178,8 +183,8 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
-<script src="network-data.js?v=2"></script>
-<script src="network.js?v=2"></script>
+<script src="app.js?v=6"></script>
+<script src="network-data.js?v=3"></script>
+<script src="network.js?v=3"></script>
 </body>
 </html>
