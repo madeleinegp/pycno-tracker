@@ -5,10 +5,15 @@
 //  (compiled from a one-off CSV hand-off — see that file's header comment).
 // ─────────────────────────────────────────────────────────────────
 
-const netState = { filter: "all", query: "", expandedId: null, modalId: null };
+const netState = { filter: "all", query: "", tile: "satellite", expandedId: null, modalId: null };
 let netSites = [];              // working dataset — live rows, or fallback snapshot
 let netSourceNote = "Loading…";
-let netMap, netMarkers = {}, netMapEl, netLastFocused = null;
+let netMap, netTileLayer, netMarkers = {}, netMapEl, netLastFocused = null;
+
+const NET_TILES = {
+  satellite: { url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attr: "Tiles &copy; Esri" },
+  street: { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attr: "&copy; OpenStreetMap contributors" }
+};
 
 function esc2(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -141,10 +146,17 @@ function netBootOrRefreshMap() {
   if (!netMap) {
     netMapEl = document.getElementById("netMap");
     netMap = L.map(netMapEl, { center: [42, -122], zoom: 4, scrollWheelZoom: false });
-    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { attribution: "Tiles &copy; Esri", maxZoom: 19 }).addTo(netMap);
+    netApplyTile();
   }
   const pts = netSites.filter(r => r.lat != null && r.lng != null).map(r => [r.lat, r.lng]);
   if (pts.length) netMap.fitBounds(L.latLngBounds(pts), { padding: [30, 30] });
+}
+
+function netApplyTile() {
+  if (!netMap) return;
+  if (netTileLayer) netMap.removeLayer(netTileLayer);
+  const t = NET_TILES[netState.tile] || NET_TILES.satellite;
+  netTileLayer = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(netMap);
 }
 
 function netIcon(vpecOnly, sel) {
@@ -190,6 +202,8 @@ function netZoomTo(r) {
 // ── Render ─────────────────────────────────────────────────────
 function netRender() {
   document.getElementById("netSourceNote").textContent = netSourceNote;
+  document.getElementById("netBtnSatellite").classList.toggle("active", netState.tile === "satellite");
+  document.getElementById("netBtnStreet").classList.toggle("active", netState.tile === "street");
   const vis = netVisible();
   const all = netSites;
   const vpecCount = all.filter(r => r.vpecOnly).length;
@@ -301,6 +315,8 @@ function netTrapFocus(e) {
 
 // ── Wire up ────────────────────────────────────────────────────
 document.getElementById("netRefreshBtn").addEventListener("click", netLoad);
+document.getElementById("netBtnSatellite").addEventListener("click", () => { netState.tile = "satellite"; netApplyTile(); netRender(); });
+document.getElementById("netBtnStreet").addEventListener("click", () => { netState.tile = "street"; netApplyTile(); netRender(); });
 document.getElementById("netSearchInput").addEventListener("input", e => { netState.query = e.target.value; netRender(); });
 document.getElementById("netModalClose").addEventListener("click", netCloseModal);
 document.getElementById("netModalBackdrop").addEventListener("click", e => { if (e.target.id === "netModalBackdrop") netCloseModal(); });

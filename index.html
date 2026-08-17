@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
@@ -94,12 +94,15 @@
 
 <section class="section-head">
   <h2>Coastwide sampling network</h2>
-  <p>Partner institutions collecting for this program, from San Diego to Alaska. Diamond markers are water sampling for Vibrio pectinicida only — no Pycnopodia eDNA component.</p>
 </section>
 
 <section class="map-section">
   <div class="map-frame">
     <div class="map-el" id="netMap"></div>
+    <div class="map-toggle">
+      <button id="netBtnSatellite" class="active">Satellite</button>
+      <button id="netBtnStreet">Street</button>
+    </div>
     <div class="map-legend">
       <div class="legend-title">Sample type</div>
       <div class="legend-row"><span class="legend-dot" style="--dot-color:var(--ink)"></span><span>eDNA sampling site</span></div>
@@ -185,6 +188,6 @@
 <script src="config.js?v=4"></script>
 <script src="app.js?v=6"></script>
 <script src="network-data.js?v=3"></script>
-<script src="network.js?v=3"></script>
+<script src="network.js?v=4"></script>
 </body>
 </html>
