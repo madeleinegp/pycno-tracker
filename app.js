@@ -93,9 +93,9 @@ function visible() {
 // ── Data load ──────────────────────────────────────────────────
 async function load() {
   document.getElementById("lastUpdated").textContent = "Refreshing…";
-  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.SHEET_NAME)}`;
+  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.SHEET_NAME)}&_cb=${Date.now()}`;
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     const text = await res.text();
     const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
     const cols = json.table.cols.map(c => c.label);

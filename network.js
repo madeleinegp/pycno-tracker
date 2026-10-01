@@ -56,9 +56,9 @@ function parseSheetTable(text, expectedMarkers) {
 async function netLoad() {
   netSourceNote = "Loading…";
   netRenderStatusOnly();
-  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.NETWORK_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.NETWORK_SHEET_NAME)}`;
+  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.NETWORK_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.NETWORK_SHEET_NAME)}&_cb=${Date.now()}`;
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     const text = await res.text();
     const { cols, rows } = parseSheetTable(text, ["Region", "Name", "Latitude", "Longitude"]);
     const idx = label => cols.indexOf(label);
