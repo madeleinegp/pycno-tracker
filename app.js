@@ -56,6 +56,14 @@ const state = {
 
 let map, tileLayer, markers = {}, mapEl, lastFocused = null;
 
+// Coordinates copy-pasted from maps/PDFs can carry a minus-sign lookalike
+// (true minus sign, en/em dash) instead of a plain hyphen — visually identical
+// but parseFloat() silently returns NaN on them. Normalize before parsing.
+function coordNum(v) {
+  const s = String(v || "").trim().replace(/[\u2212\u2010\u2013\u2014\uFE63\uFF0D]/g, "-");
+  return parseFloat(s);
+}
+
 function fieldsFor(row) {
   const lat = row[COLS.latitude] || "—", lng = row[COLS.longitude] || "—";
   return [
@@ -120,7 +128,7 @@ async function load() {
 function fitAll(tries) {
   tries = tries || 0;
   if (!map) { if (tries < 40) setTimeout(() => fitAll(tries + 1), 250); return; }
-  const pts = state.sites.map(r => [parseFloat(r[COLS.latitude]), parseFloat(r[COLS.longitude])]).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
+  const pts = state.sites.map(r => [coordNum(r[COLS.latitude]), coordNum(r[COLS.longitude])]).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
   if (pts.length) map.fitBounds(L.latLngBounds(pts), { padding: [40, 40] });
 }
 
@@ -150,7 +158,7 @@ function syncMarkers() {
   if (!map) return;
   const sel = state.modalId != null ? state.modalId : state.expandedId;
   const want = visible().filter(row => {
-    const lat = parseFloat(row[COLS.latitude]), lng = parseFloat(row[COLS.longitude]);
+    const lat = coordNum(row[COLS.latitude]), lng = coordNum(row[COLS.longitude]);
     return !isNaN(lat) && !isNaN(lng);
   });
   const keep = new Set(want.map(r => r._id));
@@ -159,7 +167,7 @@ function syncMarkers() {
   });
   want.forEach(row => {
     const isSel = sel === row._id;
-    const lat = parseFloat(row[COLS.latitude]), lng = parseFloat(row[COLS.longitude]);
+    const lat = coordNum(row[COLS.latitude]), lng = coordNum(row[COLS.longitude]);
     const existing = markers[row._id];
     if (existing) {
       if (existing._pycnoSel !== isSel) { existing.setIcon(icon(statusOf(row), isSel)); existing._pycnoSel = isSel; }
@@ -176,7 +184,7 @@ function syncMarkers() {
 
 function zoomTo(row) {
   if (!map) return;
-  const lat = parseFloat(row[COLS.latitude]), lng = parseFloat(row[COLS.longitude]);
+  const lat = coordNum(row[COLS.latitude]), lng = coordNum(row[COLS.longitude]);
   if (isNaN(lat) || isNaN(lng)) return;
   map.setView([lat, lng], Math.max(map.getZoom(), 12), { animate: true });
   if (mapEl) window.scrollTo({ top: mapEl.getBoundingClientRect().top + window.scrollY - 90, behavior: "smooth" });

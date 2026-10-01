@@ -29,8 +29,13 @@ function dmsToDD(s) {
 }
 
 function toNum(v) {
-  const s = String(v || "").trim();
+  let s = String(v || "").trim();
   if (!s) return null;
+  // Coordinates copy-pasted from maps/PDFs/autocorrect often carry a minus-sign
+  // lookalike instead of a plain hyphen (U+2212 true minus, en/em dash, etc.).
+  // They're visually identical but fail a strict numeric match, so normalize
+  // them all to a plain "-" first. Also strip stray non-breaking spaces.
+  s = s.replace(/[\u2212\u2010\u2013\u2014\uFE63\uFF0D]/g, "-").replace(/\u00A0/g, " ").trim();
   // Strict full-string match — parseFloat alone would happily read "41" out of
   // "41°03'22.0"N" and stop, silently discarding the DMS remainder as garbage.
   if (/^-?\d+(\.\d+)?$/.test(s)) return parseFloat(s);
